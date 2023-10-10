@@ -8,7 +8,7 @@ LABEL org.label-schema.name="zookeeper" \
       org.label-schema.vcs-url="https://github.com/wurstmeister/zookeeper-docker" \
       maintainer="wurstmeister"
 
-ENV ZOOKEEPER_VERSION="3.4.14"
+ENV ZOOKEEPER_VERSION="3.5.5"
 ENV ZK_HOME /opt/zookeeper-${ZOOKEEPER_VERSION}
 
 COPY download-zookeeper.sh /tmp
