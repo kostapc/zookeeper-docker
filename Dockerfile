@@ -1,6 +1,12 @@
 FROM openjdk:8u212-jre-alpine
 
-MAINTAINER Wurstmeister
+ARG build_date=unspecified
+
+LABEL org.label-schema.name="zookeeper" \
+      org.label-schema.description="Apache Zookeeper" \
+      org.label-schema.build-date="${build_date}" \
+      org.label-schema.vcs-url="https://github.com/wurstmeister/zookeeper-docker" \
+      maintainer="wurstmeister"
 
 ENV ZOOKEEPER_VERSION="3.4.14"
 ENV ZK_HOME /opt/zookeeper-${ZOOKEEPER_VERSION}
