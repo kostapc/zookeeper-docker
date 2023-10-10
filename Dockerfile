@@ -1,37 +1,32 @@
-FROM wurstmeister/base
+FROM openjdk:8u212-jre-alpine
 
-MAINTAINER Wurstmeister
+ARG build_date=unspecified
 
-ENV ZOOKEEPER_VERSION 3.4.14
+LABEL org.label-schema.name="zookeeper" \
+      org.label-schema.description="Apache Zookeeper" \
+      org.label-schema.build-date="${build_date}" \
+      org.label-schema.vcs-url="https://github.com/wurstmeister/zookeeper-docker" \
+      maintainer="wurstmeister"
 
-#Download Zookeeper
-RUN wget -q http://mirror.vorboss.net/apache/zookeeper/zookeeper-${ZOOKEEPER_VERSION}/zookeeper-${ZOOKEEPER_VERSION}.tar.gz && \
-wget -q https://www.apache.org/dist/zookeeper/KEYS && \
-wget -q https://www.apache.org/dist/zookeeper/zookeeper-${ZOOKEEPER_VERSION}/zookeeper-${ZOOKEEPER_VERSION}.tar.gz.asc && \
-wget -q https://www.apache.org/dist/zookeeper/zookeeper-${ZOOKEEPER_VERSION}/zookeeper-${ZOOKEEPER_VERSION}.tar.gz.sha512
+ENV ZOOKEEPER_VERSION="3.5.5"
+ENV ZK_HOME /opt/zookeeper-${ZOOKEEPER_VERSION}
 
-#Verify download
-RUN sha512sum -c zookeeper-${ZOOKEEPER_VERSION}.tar.gz.sha512 && \
-gpg --import KEYS && \
-gpg --verify zookeeper-${ZOOKEEPER_VERSION}.tar.gz.asc
+COPY download-zookeeper.sh /tmp
 
-#Install
-RUN tar -xzf zookeeper-${ZOOKEEPER_VERSION}.tar.gz -C /opt
-
-#Move to non-versioned dir
-RUN mv /opt/zookeeper-${ZOOKEEPER_VERSION} /opt/zookeeper
-
-#Configure
-RUN mv /opt/zookeeper/conf/zoo_sample.cfg /opt/zookeeper/conf/zoo.cfg
-
-ENV JAVA_HOME /usr/lib/jvm/java-7-openjdk-amd64
-ENV ZK_HOME /opt/zookeeper
-RUN sed  -i "s|/tmp/zookeeper|$ZK_HOME/data|g" $ZK_HOME/conf/zoo.cfg; mkdir $ZK_HOME/data
+RUN \
+ apk --update add gpgme bash curl jq && \
+ /tmp/download-zookeeper.sh && \
+ mkdir -p /opt && \
+ tar -xzf /tmp/zookeeper-${ZOOKEEPER_VERSION}.tar.gz -C /opt && \
+ mv /opt/zookeeper-${ZOOKEEPER_VERSION}/conf/zoo_sample.cfg /opt/zookeeper-${ZOOKEEPER_VERSION}/conf/zoo.cfg && \
+ sed  -i "s|/tmp/zookeeper|$ZK_HOME/data|g" $ZK_HOME/conf/zoo.cfg; mkdir $ZK_HOME/data && \
+ ln -s /opt/zookeeper-${ZOOKEEPER_VERSION} /opt/zookeeper && \
+ apk del gpgme curl jq && rm -rf /var/cache/apk/*
 
 ADD start-zk.sh /usr/bin/start-zk.sh 
 EXPOSE 2181 2888 3888
 
 WORKDIR /opt/zookeeper
-VOLUME ["/opt/zookeeper/conf", "/opt/zookeeper/data"]
+VOLUME ["/opt/zookeeper-${ZOOKEEPER_VERSION}/conf", "/opt/zookeeper-${ZOOKEEPER_VERSION}/data"]
 
-CMD /usr/sbin/sshd && bash /usr/bin/start-zk.sh
+CMD ["/bin/sh", "/usr/bin/start-zk.sh"]
