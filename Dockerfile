@@ -8,23 +8,32 @@ LABEL org.label-schema.name="zookeeper" \
       org.label-schema.vcs-url="https://github.com/kostapc/zookeeper-docker" \
       maintainer="kostapc"
 
-ENV ZOOKEEPER_VERSION="3.5.5"
-ENV ZK_HOME /opt/apache-zookeeper-${ZOOKEEPER_VERSION}
-
-RUN apk --update add gpgme bash curl jq dos2unix
-
-COPY download-zookeeper.sh /tmp
+ENV ZOOKEEPER_VERSION="3.9.3"
+ENV ZOOKEEPER_DISTR=${ZOOKEEPER_VERSION}-bin
+ENV ZK_HOME=/opt/zookeeper
 
 RUN \
- dos2unix /tmp/download-zookeeper.sh && \
- /tmp/download-zookeeper.sh && \
- mkdir -p /opt && \
- tar -xzf /tmp/apache-zookeeper-${ZOOKEEPER_VERSION}.tar.gz -C /opt && \
- mv /opt/apache-zookeeper-${ZOOKEEPER_VERSION}/conf/zoo_sample.cfg /opt/apache-zookeeper-${ZOOKEEPER_VERSION}/conf/zoo.cfg && \
- sed  -i "s|/tmp/apache-zookeeper|$ZK_HOME/data|g" $ZK_HOME/conf/zoo.cfg; mkdir $ZK_HOME/data && \
- ln -s /opt/apache-zookeeper-${ZOOKEEPER_VERSION} /opt/zookeeper
+  uname -a && \
+  apk --update add gpgme bash curl jq dos2unix && \
+  rm -rf /var/cache/apk/*
 
-RUN apk del gpgme curl jq && rm -rf /var/cache/apk/*
+RUN apk add ca-certificates && update-ca-certificates
+
+COPY download-zookeeper.sh /tmp
+COPY download-zookeeper-mirrored.sh /tmp
+RUN \
+  dos2unix /tmp/download-zookeeper.sh && chmod +x /tmp/download-zookeeper.sh && \
+  dos2unix /tmp/download-zookeeper-mirrored.sh && chmod +x /tmp/download-zookeeper-mirrored.sh && \
+  /tmp/download-zookeeper-mirrored.sh
+#  /tmp/download-zookeeper.sh
+
+RUN \
+ mkdir -p /opt && \
+ tar -xzf /tmp/apache-zookeeper-${ZOOKEEPER_DISTR}.tar.gz -C /opt && \
+ ln -s /opt/apache-zookeeper-${ZOOKEEPER_DISTR} ${ZK_HOME} && \
+ ls /opt && \
+ mv /opt/zookeeper/conf/zoo_sample.cfg /opt/zookeeper/conf/zoo.cfg && \
+ sed  -i "s|/tmp/apache-zookeeper|$ZK_HOME/data|g" $ZK_HOME/conf/zoo.cfg; mkdir $ZK_HOME/data
 
 ADD start-zk.sh /usr/bin/start-zk.sh
 RUN dos2unix /usr/bin/start-zk.sh && apk del dos2unix
