@@ -26,6 +26,6 @@ install:
   - docker buildx inspect
 
 script:
-  - docker buildx build --progress plain --platform=$ARCHITECTURES -t wurstmeister/zookeeper .
-  - docker buildx build --progress plain --platform=linux/amd64 -t wurstmeister/zookeeper --load .
+  - docker buildx build --progress plain --platform=$ARCHITECTURES -t c0f3/zookeeper .
+  - docker buildx build --progress plain --platform=linux/amd64 -t c0f3/zookeeper --load .
 

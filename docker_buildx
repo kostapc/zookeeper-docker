@@ -24,6 +24,6 @@ docker buildx build \
     --platform "${PLATFORMS}" \
     --progress=plain \
     --build-arg build_date="$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
-    -t wurstmeister/zookeeper \
+    -t c0f3/zookeeper \
     $EXTRA_BUILDX_ARGS \
     .
